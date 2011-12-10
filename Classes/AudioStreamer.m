@@ -63,9 +63,11 @@ NSString * const AS_AUDIO_MEMORY_ALLOC_FAILED_STRING = @"Alloc memory failed";
 
 @interface AudioStreamer ()
 @property (readwrite) AudioStreamerState state;
+#if defined (USE_PREBUFFER) && USE_PREBUFFER
 @property (readwrite) BOOL allBufferPushed;
 @property (readwrite) BOOL finishedBuffer;
-
+- (void)pushingBufferThread:(id)object;
+#endif
 - (void)handlePropertyChangeForFileStream:(AudioFileStreamID)inAudioFileStream
 	fileStreamPropertyID:(AudioFileStreamPropertyID)inPropertyID
 	ioFlags:(UInt32 *)ioFlags;
@@ -86,8 +88,6 @@ NSString * const AS_AUDIO_MEMORY_ALLOC_FAILED_STRING = @"Alloc memory failed";
 - (void)enqueueBuffer;
 - (void)handleReadFromStream:(CFReadStreamRef)aStream
 	eventType:(CFStreamEventType)eventType;
-
-- (void)pushingBufferThread:(id)object;
 @end
 
 #pragma mark Audio Callback Function Prototypes
@@ -237,9 +237,10 @@ void ASReadStreamCallBack
 @synthesize httpHeaders;
 @synthesize numberOfChannels;
 @synthesize vbr;
+#if defined (USE_PREBUFFER) && USE_PREBUFFER
 @synthesize allBufferPushed = _allBufferPushed;
 @synthesize finishedBuffer = _finishedBuffer;
-
+#endif
 - (void)setVolume:(float)vol {
     @synchronized(self) {
         if (audioQueue) {
@@ -263,24 +264,15 @@ void ASReadStreamCallBack
 #ifdef SHOUTCAST_METADATA
 		metaDataString = [[NSMutableString alloc] initWithString:@""];
 #endif
+#if defined (USE_PREBUFFER) && USE_PREBUFFER
         _buffers = [[NSMutableArray alloc] initWithCapacity:2048/kAQDefaultBufSize];
         _bufferLock = [[NSLock alloc] init];
         self.allBufferPushed = NO;
         self.finishedBuffer = NO;
-        _lastTimeInterval = 0;
+#endif
 	}
 	return self;
 }
-
-//- (id)initWithURL:(NSURL *)aURL encryption:(EncryptionMethod)method crc32:(uLong)crc32
-//{
-//    if ((self = [self initWithURL:aURL]))
-//    {
-//        _encryption = method;
-//        _crc32 = crc32;
-//    }
-//    return self;
-//}
 
 //
 // dealloc
@@ -294,8 +286,10 @@ void ASReadStreamCallBack
 #ifdef SHOUTCAST_METADATA
 	[metaDataString release];
 #endif
+#if defined (USE_PREBUFFER) && USE_PREBUFFER
     RELEASE_SAFELY(_buffers);
     RELEASE_SAFELY(_bufferLock);
+#endif
 	[super dealloc];
 }
 
@@ -786,6 +780,7 @@ void ASReadStreamCallBack
 		if (!CFReadStreamOpen(stream))
 		{
 			CFRelease(stream);
+            stream = NULL;
 			[self presentAlertWithTitle:NSLocalizedStringFromTable(@"File Error", @"Errors", nil)
 								message:NSLocalizedStringFromTable(@"Unable to configure network read stream.", @"Errors", nil)];
 			return NO;
@@ -916,16 +911,16 @@ void ASReadStreamCallBack
 		}
         [pool release];
         [NSThread sleepForTimeInterval:0.01];
+#if defined (USE_PREBUFFER) && USE_PREBUFFER
 	} while ((self.allBufferPushed || isRunning || [self isFinishing]) && ![self runLoopShouldExit]);
+#else
+    } while (isRunning && ![self runLoopShouldExit]);
+#endif
 	
 cleanup:
 
 	@synchronized(self)
 	{
-        if (_encryptionSampledBuffer) {
-            free(_encryptionSampledBuffer);
-            _encryptionSampledBuffer = NULL;
-        }
 		//
 		// Cleanup the read stream if it is still open
 		//
@@ -1388,7 +1383,9 @@ cleanup:
 	}
 	else if (eventType == kCFStreamEventEndEncountered)
 	{
+#if defined (USE_PREBUFFER) && USE_PREBUFFER
         self.finishedBuffer = YES;
+#endif
         if ([url isFileURL]) {
             @synchronized(self)
             {
@@ -1527,13 +1524,6 @@ cleanup:
 			// Read the bytes from the stream
 			//
 			length = CFReadStreamRead(stream, bytes, kAQDefaultBufSize);
-/*            NSTimeInterval t = [[NSDate date] timeIntervalSince1970];
-            if (0 != _lastTimeInterval) {
-                float rate = length / (t - _lastTimeInterval);
-                TTDCONDITIONLOG(1, @"download rate:%.2f kB", rate / 1024.0f);
-            }
-            _lastTimeInterval = t;
- */
 			if (length == -1)
 			{
 				[self failWithErrorCode:AS_AUDIO_DATA_NOT_FOUND];
@@ -1551,7 +1541,7 @@ cleanup:
 			// get and handle the shoutcast metadata
 
 			int streamStart = 0;
-			if (metaDataInterval == 0)
+			if (![url isFileURL] && metaDataInterval == 0)
 			{
 				CFHTTPMessageRef myResponse = (CFHTTPMessageRef)CFReadStreamCopyProperty(stream, kCFStreamPropertyHTTPResponseHeader);
 				UInt32 statusCode = CFHTTPMessageGetResponseStatusCode(myResponse);
@@ -1774,6 +1764,22 @@ cleanup:
 #endif
 		}
 #ifdef SHOUTCAST_METADATA
+#if defined (USE_PREBUFFER) && USE_PREBUFFER
+        if (![url isFileURL]) {
+            NSData * data = [[NSData alloc] initWithBytes:bytes length:length];
+            [_bufferLock lock];
+            [_buffers addObject:data];
+            [_bufferLock unlock];
+            [data release];
+            
+            if (nil == _bufferPushingThread) {
+                _bufferPushingThread = [[NSThread alloc] initWithTarget:self selector:@selector(pushingBufferThread:) object:nil];
+                [_bufferPushingThread setName:@"Push/Parse Buffer Thread"];
+                [_bufferPushingThread start];
+            }
+        }
+		else {
+#endif
 		if (discontinuous)
 		{
 			/*
@@ -1826,8 +1832,12 @@ cleanup:
 				}
 			}
 		} // end discontinuous
+#if defined (USE_PREBUFFER) && USE_PREBUFFER
+        }
+#endif
 		
 #else
+#if defined (USE_PREBUFFER) && USE_PREBUFFER
         if (![url isFileURL]) {
             NSData * data = [[NSData alloc] initWithBytes:bytes length:length];
             [_bufferLock lock];
@@ -1842,6 +1852,7 @@ cleanup:
             }
         }
 		else {
+#endif
             if (discontinuous)
             {
                 err = AudioFileStreamParseBytes(audioFileStream, length, bytes, kAudioFileStreamParseFlag_Discontinuity);
@@ -1860,11 +1871,14 @@ cleanup:
                     return;
                 }
             }
+#if defined (USE_PREBUFFER) && USE_PREBUFFER
         }
+#endif
 #endif
 	}
 }
 
+#if defined (USE_PREBUFFER) && USE_PREBUFFER
 - (void)pushingBufferThread:(id)object
 {
     @autoreleasepool {
@@ -1976,6 +1990,7 @@ cleanup:
         RELEASE_SAFELY(_bufferPushingThread);
     }
 }
+#endif
 //
 // enqueueBuffer
 //

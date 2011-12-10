@@ -11,7 +11,7 @@
 //  this copyright and permission notice. Attribution in compiled projects is
 //  appreciated but not required.
 //
-//#define SHOUTCAST_METADATA
+#define SHOUTCAST_METADATA
 
 #if TARGET_OS_IPHONE			
 #import <UIKit/UIKit.h>
@@ -26,8 +26,8 @@
 #include <pthread.h>
 #include <AudioToolbox/AudioToolbox.h>
 
-//#import "encryption.h" //custom encryption support
-#import <zlib.h>
+
+#define USE_PREBUFFER 1
 
 
 #define LOG_QUEUED_BUFFERS 0
@@ -185,16 +185,12 @@ extern NSString * const ASUpdateMetadataNotification;
 #endif
 	BOOL vbr; // indicates VBR (or not) stream
     
-//    EncryptionMethod _encryption;//加密方式
-    uLong _crc32;
-    void * _encryptionSampledBuffer; //加密用缓冲
-    NSUInteger _encryptionOffset;
-    
+
+#if defined (USE_PREBUFFER) && USE_PREBUFFER
     NSLock * _bufferLock;
     NSMutableArray * _buffers;
     NSThread * _bufferPushingThread;
-    
-    NSTimeInterval _lastTimeInterval;
+#endif
 }
 
 @property AudioStreamerErrorCode errorCode;
