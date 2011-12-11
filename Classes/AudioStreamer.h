@@ -190,6 +190,8 @@ extern NSString * const ASUpdateMetadataNotification;
     NSLock * _bufferLock;
     NSMutableArray * _buffers;
     NSThread * _bufferPushingThread;
+    BOOL _allBufferPushed;
+    BOOL _finishedBuffer;
 #endif
 }
 
