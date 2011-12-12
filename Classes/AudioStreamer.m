@@ -267,6 +267,7 @@ void ASReadStreamCallBack
 #if defined (USE_PREBUFFER) && USE_PREBUFFER
         _buffers = [[NSMutableArray alloc] initWithCapacity:2048/kAQDefaultBufSize];
         _bufferLock = [[NSLock alloc] init];
+        _audioStreamLock = [[NSLock alloc] init];
         self.allBufferPushed = NO;
         self.finishedBuffer = NO;
 #endif
@@ -289,6 +290,7 @@ void ASReadStreamCallBack
 #if defined (USE_PREBUFFER) && USE_PREBUFFER
     RELEASE_SAFELY(_buffers);
     RELEASE_SAFELY(_bufferLock);
+    RELEASE_SAFELY(_audioStreamLock);
 #endif
 	[super dealloc];
 }
@@ -934,7 +936,7 @@ cleanup:
 		//
 		// Close the audio file strea,
 		//
-        @synchronized(_bufferLock) {
+        [_audioStreamLock lock];
 		if (audioFileStream)
 		{
 			err = AudioFileStreamClose(audioFileStream);
@@ -944,7 +946,7 @@ cleanup:
 				[self failWithErrorCode:AS_FILE_STREAM_CLOSE_FAILED];
 			}
 		}
-        }
+        [_audioStreamLock unlock];
 		
 		//
 		// Dispose of the Audio Queue
@@ -1320,8 +1322,8 @@ cleanup:
 	@synchronized(self)
 	{
 		if (audioQueue &&
-			(state == AS_PLAYING || state == AS_PAUSED ||
-				state == AS_BUFFERING || state == AS_WAITING_FOR_QUEUE_TO_START))
+			(self.state == AS_PLAYING || self.state == AS_PAUSED ||
+				self.state == AS_BUFFERING || self.state == AS_WAITING_FOR_QUEUE_TO_START))
 		{
 			self.state = AS_STOPPING;
 			stopReason = AS_STOPPING_USER_ACTION;
@@ -1332,15 +1334,17 @@ cleanup:
 				return;
 			}
 		}
-		else if (state != AS_INITIALIZED)
+		else if (self.state != AS_INITIALIZED)
 		{
 			self.state = AS_STOPPED;
 			stopReason = AS_STOPPING_USER_ACTION;
 		}
 		seekWasRequested = NO;
 	}
-	
-	while (state != AS_INITIALIZED)
+	//not use atomic property may accidentally encounter weird situation
+    //when state is AS_INITIALIZED but the while statement fall into a 
+    //dead loop.
+	while (self.state != AS_INITIALIZED)
 	{
 		[NSThread sleepForTimeInterval:0.1];
 	}
@@ -1793,9 +1797,9 @@ cleanup:
 			if (lengthNoMetaData > 0)
 			{
 				//NSLog(@"Parsing no meta bytes (Discontinuous).");
-                @synchronized(_bufferLock) {
+                [_audioStreamLock lock];
 				err = AudioFileStreamParseBytes(audioFileStream, lengthNoMetaData, bytesNoMetaData, kAudioFileStreamParseFlag_Discontinuity);
-                }
+                [_audioStreamLock unlock];
 				if (err)
 				{
 					[self failWithErrorCode:AS_FILE_STREAM_PARSE_BYTES_FAILED];
@@ -1805,9 +1809,9 @@ cleanup:
 			else if (metaDataInterval == 0)	// make sure this isn't a stream with metadata
 			{
 				//NSLog(@"Parsing normal bytes (Discontinuous).");
-                @synchronized(_bufferLock) {
+                [_audioStreamLock lock];
 				err = AudioFileStreamParseBytes(audioFileStream, length, bytes, kAudioFileStreamParseFlag_Discontinuity);
-                }
+                [_audioStreamLock unlock];
 				if (err)
 				{
 					[self failWithErrorCode:AS_FILE_STREAM_PARSE_BYTES_FAILED];
@@ -1820,9 +1824,9 @@ cleanup:
 			if (lengthNoMetaData > 0)
 			{
 				//NSLog(@"Parsing no meta bytes.");
-                @synchronized(_bufferLock) {
+                [_audioStreamLock lock];
 				err = AudioFileStreamParseBytes(audioFileStream, lengthNoMetaData, bytesNoMetaData, 0);
-                }
+                [_audioStreamLock unlock];
 				if (err)
 				{
 					[self failWithErrorCode:AS_FILE_STREAM_PARSE_BYTES_FAILED];
@@ -1832,9 +1836,9 @@ cleanup:
 			else if (metaDataInterval == 0)	// make sure this isn't a stream with metadata
 			{
 				//NSLog(@"Parsing normal bytes.");
-                @synchronized(_bufferLock) {
+                [_audioStreamLock lock];
 				err = AudioFileStreamParseBytes(audioFileStream, length, bytes, 0);
-                }
+                [_audioStreamLock unlock];
 				if (err)
 				{
 					[self failWithErrorCode:AS_FILE_STREAM_PARSE_BYTES_FAILED];
@@ -1865,9 +1869,9 @@ cleanup:
 #endif
             if (discontinuous)
             {
-                @synchronized(_bufferLock) {
+                [_audioStreamLock lock];
                 err = AudioFileStreamParseBytes(audioFileStream, length, bytes, kAudioFileStreamParseFlag_Discontinuity);
-                }
+                [_audioStreamLock unlock];
                 if (err)
                 {
                     [self failWithErrorCode:AS_FILE_STREAM_PARSE_BYTES_FAILED];
@@ -1876,9 +1880,9 @@ cleanup:
             }
             else
             {
-                @synchronized(_bufferLock) {
+                [_audioStreamLock lock];
                 err = AudioFileStreamParseBytes(audioFileStream, length, bytes, 0);
-                }
+                [_audioStreamLock unlock];
                 if (err)
                 {
                     [self failWithErrorCode:AS_FILE_STREAM_PARSE_BYTES_FAILED];
@@ -1914,9 +1918,9 @@ cleanup:
                 if (data) {
                     if (discontinuous)
                     {
-                        @synchronized(_bufferLock) {
+                        [_audioStreamLock lock];
                         err = AudioFileStreamParseBytes(audioFileStream, data.length, data.bytes, kAudioFileStreamParseFlag_Discontinuity);
-                        }
+                        [_audioStreamLock unlock];
                         if (err)
                         {
                             [self failWithErrorCode:AS_FILE_STREAM_PARSE_BYTES_FAILED];
@@ -1925,9 +1929,9 @@ cleanup:
                     }
                     else
                     {
-                        @synchronized(_bufferLock) {
+                        [_audioStreamLock lock];
                         err = AudioFileStreamParseBytes(audioFileStream, data.length, data.bytes, 0);
-                        }
+                        [_audioStreamLock unlock];
                         if (err)
                         {
                             [self failWithErrorCode:AS_FILE_STREAM_PARSE_BYTES_FAILED];

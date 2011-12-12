@@ -188,6 +188,7 @@ extern NSString * const ASUpdateMetadataNotification;
 
 #if defined (USE_PREBUFFER) && USE_PREBUFFER
     NSLock * _bufferLock;
+    NSLock * _audioStreamLock;
     NSMutableArray * _buffers;
     NSThread * _bufferPushingThread;
     BOOL _allBufferPushed;
