@@ -840,7 +840,7 @@ void ASReadStreamCallBack
 				NSLog(@"### Not starting audio thread. State code is: %d", state);
 			}
 			self.state = AS_INITIALIZED;
-			[pool release];
+			[pool drain];
 			return;
 		}
 		
@@ -909,7 +909,7 @@ void ASReadStreamCallBack
 			}
 			self.state = AS_BUFFERING;
 		}
-        [pool release];
+        [pool drain];
         [NSThread sleepForTimeInterval:0.01];
 #if defined (USE_PREBUFFER) && USE_PREBUFFER
 	} while ((self.allBufferPushed || isRunning || [self isFinishing]) && ![self runLoopShouldExit]);
@@ -976,7 +976,7 @@ cleanup:
 		[internalThread release];
 		internalThread = nil;
 	}
-	[pool release];
+	[pool drain];
 }
 
 //
@@ -1881,11 +1881,15 @@ cleanup:
 #if defined (USE_PREBUFFER) && USE_PREBUFFER
 - (void)pushingBufferThread:(id)object
 {
-    @autoreleasepool {
+    NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
+    //@autoreleasepool
+    {
         NSData * data = nil;
 
         while (![self runLoopShouldExit]) {
-            @autoreleasepool {
+            NSAutoreleasePool * inpool = [[NSAutoreleasePool alloc] init];
+//            @autoreleasepool
+            {
                 data = nil;
                 [_bufferLock lock];
                 if ([_buffers count]) {
@@ -1985,10 +1989,13 @@ cleanup:
                     [NSThread sleepForTimeInterval:0.01];
                 }
             }
+            [inpool drain];
         }
         self.allBufferPushed = YES;
         RELEASE_SAFELY(_bufferPushingThread);
     }
+    
+    [pool drain];
 }
 #endif
 //
@@ -2606,7 +2613,7 @@ cleanup:
 		}
 	}
 	
-	[pool release];
+	[pool drain];
 }
 
 #if TARGET_OS_IPHONE
