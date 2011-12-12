@@ -932,10 +932,14 @@ cleanup:
 			CFRelease(stream);
 			stream = nil;
 		}
-		
+    }
 		//
 		// Close the audio file strea,
 		//
+
+//MUST divde @synchronized(self) {} into two blocks, 
+//or it will run in dead lock
+//use a audioStreamLock is to prevent audio stream is closed when pushDataThread is pushing data
         [_audioStreamLock lock];
 		if (audioFileStream)
 		{
@@ -947,7 +951,8 @@ cleanup:
 			}
 		}
         [_audioStreamLock unlock];
-		
+    @synchronized(self)
+    {
 		//
 		// Dispose of the Audio Queue
 		//
