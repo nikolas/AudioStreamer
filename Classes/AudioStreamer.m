@@ -937,7 +937,7 @@ cleanup:
 		// Close the audio file strea,
 		//
 
-//MUST divde @synchronized(self) {} into two blocks, 
+//MUST divde @synchronized(self) {} into two blocks , 
 //or it will run in dead lock
 //use a audioStreamLock is to prevent audio stream is closed when pushDataThread is pushing data
         [_audioStreamLock lock];
@@ -1782,12 +1782,13 @@ cleanup:
             [_buffers addObject:data];
             [_bufferLock unlock];
             [data release];
-            
+           @synchronized(self) { 
             if (nil == _bufferPushingThread) {
                 _bufferPushingThread = [[NSThread alloc] initWithTarget:self selector:@selector(pushingBufferThread:) object:nil];
                 [_bufferPushingThread setName:@"Push/Parse Buffer Thread"];
                 [_bufferPushingThread start];
             }
+           }
         }
 		else {
 #endif
@@ -1863,11 +1864,12 @@ cleanup:
             [_buffers addObject:data];
             [_bufferLock unlock];
             [data release];
-            
-            if (nil == _bufferPushingThread) {
-                _bufferPushingThread = [[NSThread alloc] initWithTarget:self selector:@selector(pushingBufferThread:) object:nil];
-                [_bufferPushingThread setName:@"Push/Parse Buffer Thread"];
-                [_bufferPushingThread start];
+            @synchronized(self) { 
+                if (nil == _bufferPushingThread) {
+                    _bufferPushingThread = [[NSThread alloc] initWithTarget:self selector:@selector(pushingBufferThread:) object:nil];
+                    [_bufferPushingThread setName:@"Push/Parse Buffer Thread"];
+                    [_bufferPushingThread start];
+                }
             }
         }
 		else {
@@ -2019,7 +2021,9 @@ cleanup:
             [inpool drain];
         }
         self.allBufferPushed = YES;
-        RELEASE_SAFELY(_bufferPushingThread);
+        @synchronized(self) { 
+            RELEASE_SAFELY(_bufferPushingThread);
+        }
     }
     
     [pool drain];
