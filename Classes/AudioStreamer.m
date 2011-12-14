@@ -1282,7 +1282,7 @@ cleanup:
 {
 	@synchronized(self)
 	{
-		if (state == AS_PLAYING)
+		if (state == AS_PLAYING || state == AS_BUFFERING) //if is buffering, the user pauses it
 		{
 			err = AudioQueuePause(audioQueue);
 			if (err)
