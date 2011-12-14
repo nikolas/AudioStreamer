@@ -2017,10 +2017,12 @@ cleanup:
                     }
                 }
                 else {
-                    [NSThread sleepForTimeInterval:0.01];
+//                    [NSThread sleepForTimeInterval:0.01];
                 }
             }
             [inpool drain];
+            
+            [NSThread sleepForTimeInterval:0.01];
         }
         self.allBufferPushed = YES;
         @synchronized(self) { 
