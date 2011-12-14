@@ -1871,6 +1871,8 @@ cleanup:
                     [_bufferPushingThread start];
                 }
             }
+            //maybe the runloop runs too fast ,that _bufferPushingThread is frequently blocked before the streaing is pre-buffered.
+            [NSThread sleepForTimeInterval:0.01];
         }
 		else {
 #endif
