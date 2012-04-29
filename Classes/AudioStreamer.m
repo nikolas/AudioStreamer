@@ -235,6 +235,7 @@ void ASReadStreamCallBack
 @synthesize numberOfChannels;
 @synthesize vbr;
 @synthesize debug = _debug;
+@synthesize totalBytesDownloaded = _totalBytesDownloaded;
 #if defined (USE_PREBUFFER) && USE_PREBUFFER
 @synthesize allBufferPushed = _allBufferPushed;
 @synthesize finishedBuffer = _finishedBuffer;
@@ -260,6 +261,7 @@ void ASReadStreamCallBack
 	{
 		url = [aURL retain];
         self.debug = YES;
+        self.totalBytesDownloaded = 0;
 #if defined (USE_PREBUFFER) && USE_PREBUFFER
         _buffers = [[NSMutableArray alloc] initWithCapacity:2048/kAQDefaultBufSize];
         _bufferLock = [[NSLock alloc] init];
@@ -1448,7 +1450,8 @@ cleanup:
 			// Read the bytes from the stream
 			//
 			length = CFReadStreamRead(stream, bytes, kAQDefaultBufSize);
-            if (self.debug) NSLog(@"bytes read: %ld", length);
+            self.totalBytesDownloaded += length;
+            if (self.debug) NSLog(@"bytes downloaded: %lu", self.totalBytesDownloaded);
 			if (length == -1)
 			{
 				[self failWithErrorCode:AS_AUDIO_DATA_NOT_FOUND];

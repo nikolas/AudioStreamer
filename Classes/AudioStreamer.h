@@ -43,7 +43,7 @@
 								// to zero too often, this value may need to
 								// increase. Min 3, typical 8-24.
 								
-#define kAQDefaultBufSize 2048	// Number of bytes in each audio queue buffer
+#define kAQDefaultBufSize 4096	// Number of bytes in each audio queue buffer
 								// Needs to be big enough to hold a packet of
 								// audio from the audio file. If number is too
 								// large, queuing of audio before playback starts
@@ -194,6 +194,7 @@ extern NSString * const ASPresentAlertWithTitleNotification;
 @property (readonly) UInt32 numberOfChannels;
 @property (readonly) BOOL vbr;
 @property (readwrite) BOOL debug;
+@property (readwrite) UInt32 totalBytesDownloaded;
 
 - (id)initWithURL:(NSURL *)aURL;
 //- (id)initWithURL:(NSURL *)aURL encryption:(EncryptionMethod)method crc32:(uLong)crc32;
