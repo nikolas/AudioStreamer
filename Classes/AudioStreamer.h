@@ -205,7 +205,6 @@ extern NSString * const ASUpdateMetadataNotification;
 @property (readwrite) UInt32 bitRate;
 @property (readonly) NSDictionary *httpHeaders;
 @property (readonly) UInt32 numberOfChannels;
-@property (assign, getter=isMeteringEnabled) BOOL meteringEnabled;
 @property (readonly) BOOL vbr;
 
 - (id)initWithURL:(NSURL *)aURL;
@@ -219,11 +218,6 @@ extern NSString * const ASUpdateMetadataNotification;
 - (BOOL)isIdle;
 - (void)seekToTime:(double)newSeekTime;
 - (double)calculatedBitRate;
-
-// level metering
-- (float)peakPowerForChannel:(NSUInteger)channelNumber;
-- (float)averagePowerForChannel:(NSUInteger)channelNumber;
-
 
 - (void)setVolume:(float)vol;
 @end

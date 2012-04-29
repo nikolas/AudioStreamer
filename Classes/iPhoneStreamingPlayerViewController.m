@@ -15,7 +15,6 @@
 #import "iPhoneStreamingPlayerAppDelegate.h"
 #import "iPhoneStreamingPlayerViewController.h"
 #import "AudioStreamer.h"
-#import "LevelMeterView.h"
 #import <QuartzCore/CoreAnimation.h>
 #import <MediaPlayer/MediaPlayer.h>
 #import <CFNetwork/CFNetwork.h>
@@ -86,8 +85,6 @@
 		metadataTitle.text = currentTitle;
      
 	if (!streamer) {
-		[levelMeterView updateMeterWithLeftValue:0.0 
-									  rightValue:0.0];
 		[self setButtonImage:[UIImage imageNamed:@"playbutton.png"]];
 	}
 	else 
@@ -110,11 +107,6 @@
 				 selector:@selector(updateProgress:)
 				 userInfo:nil
 				 repeats:YES];
-				levelMeterUpdateTimer = [NSTimer scheduledTimerWithTimeInterval:.1 
-																		 target:self 
-																	   selector:@selector(updateLevelMeters:) 
-																	   userInfo:nil 
-																		repeats:YES];
 		}
 	}
 	else {
@@ -122,10 +114,6 @@
 		{
 			[progressUpdateTimer invalidate];
 			progressUpdateTimer = nil;
-		}
-		if(levelMeterUpdateTimer) {
-			[levelMeterUpdateTimer invalidate];
-			levelMeterUpdateTimer = nil;
 		}
 	}
 }
@@ -188,9 +176,6 @@
 	[volumeView sizeToFit];
 	
 	[self setButtonImage:[UIImage imageNamed:@"playbutton.png"]];
-	
-	levelMeterView = [[LevelMeterView alloc] initWithFrame:CGRectMake(10.0, 310.0, 300.0, 60.0)];
-	[self.view addSubview:levelMeterView];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -316,32 +301,23 @@
 	if ([streamer isWaiting])
 	{
 		if (appDelegate.uiIsVisible) {
-			[levelMeterView updateMeterWithLeftValue:0.0 
-										   rightValue:0.0];
-			[streamer setMeteringEnabled:NO];
 			[self setButtonImage:[UIImage imageNamed:@"loadingbutton.png"]];
 		}
 	}
 	else if ([streamer isPlaying])
 	{
 		if (appDelegate.uiIsVisible) {
-			[streamer setMeteringEnabled:YES];
 			[self setButtonImage:[UIImage imageNamed:@"stopbutton.png"]];
 		}
 	}
 	else if ([streamer isPaused]) {
 		if (appDelegate.uiIsVisible) {
-			[levelMeterView updateMeterWithLeftValue:0.0 
-										   rightValue:0.0];
-			[streamer setMeteringEnabled:NO];
 			[self setButtonImage:[UIImage imageNamed:@"pausebutton.png"]];
 		}
 	}
 	else if ([streamer isIdle])
 	{
 		if (appDelegate.uiIsVisible) {
-			[levelMeterView updateMeterWithLeftValue:0.0 
-										   rightValue:0.0];
 			[self setButtonImage:[UIImage imageNamed:@"playbutton.png"]];
 		}
 		[self destroyStreamer];
@@ -442,20 +418,6 @@
 	}
 }
 
-
-//
-// updateLevelMeters:
-//
-
-- (void)updateLevelMeters:(NSTimer *)timer {
-	iPhoneStreamingPlayerAppDelegate *appDelegate = (iPhoneStreamingPlayerAppDelegate *)[[UIApplication sharedApplication] delegate];
-	if([streamer isMeteringEnabled] && appDelegate.uiIsVisible) {
-		[levelMeterView updateMeterWithLeftValue:[streamer averagePowerForChannel:0] 
-									  rightValue:[streamer averagePowerForChannel:([streamer numberOfChannels] > 1 ? 1 : 0)]];
-	}
-}
-
-
 //
 // textFieldShouldReturn:
 //
@@ -482,7 +444,6 @@
 {
 	[self destroyStreamer];
 	[self createTimers:NO];
-	[levelMeterView release];
 	[super dealloc];
 }
 
