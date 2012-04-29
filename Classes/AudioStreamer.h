@@ -108,6 +108,13 @@ typedef enum
 extern NSString * const ASStatusChangedNotification;
 extern NSString * const ASPresentAlertWithTitleNotification;
 
+@protocol AudioStreamerProtocol
+@optional
+-(void)audioStreamDidFinishDownloading:(id)sender withBytesDownloaded:(int)numBytes; // not final
+
+@end
+
+
 @interface AudioStreamer : NSObject
 {
 #if TARGET_OS_IPHONE    
@@ -194,7 +201,9 @@ extern NSString * const ASPresentAlertWithTitleNotification;
 @property (readonly) UInt32 numberOfChannels;
 @property (readonly) BOOL vbr;
 @property (readwrite) BOOL debug;
-@property (readwrite) UInt32 totalBytesDownloaded;
+@property (readwrite) int totalBytesDownloaded;
+@property (readwrite) int totalBytesExpected;
+@property (retain, nonatomic) id <AudioStreamerProtocol> delegate;
 
 - (id)initWithURL:(NSURL *)aURL;
 //- (id)initWithURL:(NSURL *)aURL encryption:(EncryptionMethod)method crc32:(uLong)crc32;

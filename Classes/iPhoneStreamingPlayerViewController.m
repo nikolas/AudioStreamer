@@ -143,6 +143,8 @@
 
 	NSURL *url = [NSURL URLWithString:escapedValue];
 	streamer = [[AudioStreamer alloc] initWithURL:url];
+    
+    streamer.delegate = self;
 	
 	[self createTimers:YES];
 
@@ -377,6 +379,14 @@
 	[self destroyStreamer];
 	[self createTimers:NO];
 	[super dealloc];
+}
+
+#pragma mark AudioStreamerProtocol Implementation
+
+-(void)audioStreamDidFinishDownloading:(id)sender
+                   withBytesDownloaded:(int)numBytes
+{
+    NSLog(@"delegate test, numBytes = %d", numBytes); 
 }
 
 #pragma mark Remote Control Events

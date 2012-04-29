@@ -236,6 +236,8 @@ void ASReadStreamCallBack
 @synthesize vbr;
 @synthesize debug = _debug;
 @synthesize totalBytesDownloaded = _totalBytesDownloaded;
+@synthesize totalBytesExpected = _totalBytesExpected;
+@synthesize delegate = _delegate;
 #if defined (USE_PREBUFFER) && USE_PREBUFFER
 @synthesize allBufferPushed = _allBufferPushed;
 @synthesize finishedBuffer = _finishedBuffer;
@@ -1402,6 +1404,7 @@ cleanup:
                 httpHeaders =
                 (NSDictionary *)CFHTTPMessageCopyAllHeaderFields((CFHTTPMessageRef)message);
                 CFRelease(message);
+                self.totalBytesExpected = [(NSString *)[httpHeaders objectForKey:@"Content-Length"] intValue];
                 if (self.debug) NSLog(@"headers %@", httpHeaders);
                 
                 //
@@ -1451,7 +1454,8 @@ cleanup:
 			//
 			length = CFReadStreamRead(stream, bytes, kAQDefaultBufSize);
             self.totalBytesDownloaded += length;
-            if (self.debug) NSLog(@"bytes downloaded: %lu", self.totalBytesDownloaded);
+            if (self.debug) NSLog(@"bytes downloaded: %d", self.totalBytesDownloaded);
+            
 			if (length == -1)
 			{
 				[self failWithErrorCode:AS_AUDIO_DATA_NOT_FOUND];
@@ -1508,6 +1512,14 @@ cleanup:
 #if defined (USE_PREBUFFER) && USE_PREBUFFER
         }
 #endif
+        //
+        // send message audioStreamDidFinishDownloading:withBytesDownloaded: to delegate
+        //
+        if (self.delegate) {
+            if (self.totalBytesDownloaded == self.totalBytesExpected) {
+                [self.delegate audioStreamDidFinishDownloading:self withBytesDownloaded:self.totalBytesDownloaded];
+            }
+        }
 	}
 }
 
