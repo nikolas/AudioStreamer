@@ -110,6 +110,9 @@ extern NSString * const ASPresentAlertWithTitleNotification;
 
 @protocol AudioStreamerProtocol
 @optional
+//
+// this method does not work with seeking
+//
 -(void)audioStreamDidFinishDownloading:(id)sender withBytesDownloaded:(int)numBytes; // not final
 
 @end
@@ -201,8 +204,8 @@ extern NSString * const ASPresentAlertWithTitleNotification;
 @property (readonly) UInt32 numberOfChannels;
 @property (readonly) BOOL vbr;
 @property (readwrite) BOOL debug;
-@property (readwrite) int totalBytesDownloaded;
-@property (readwrite) int totalBytesExpected;
+@property (readwrite) int bytesDownloaded;
+@property (readwrite) int bytesExpected; // is set to -1 if seekToTime is called as it's unreliable
 @property (retain, nonatomic) id <AudioStreamerProtocol> delegate;
 
 - (id)initWithURL:(NSURL *)aURL;

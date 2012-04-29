@@ -235,8 +235,8 @@ void ASReadStreamCallBack
 @synthesize numberOfChannels;
 @synthesize vbr;
 @synthesize debug = _debug;
-@synthesize totalBytesDownloaded = _totalBytesDownloaded;
-@synthesize totalBytesExpected = _totalBytesExpected;
+@synthesize bytesDownloaded = _bytesDownloaded;
+@synthesize bytesExpected = _bytesExpected;
 @synthesize delegate = _delegate;
 #if defined (USE_PREBUFFER) && USE_PREBUFFER
 @synthesize allBufferPushed = _allBufferPushed;
@@ -263,7 +263,7 @@ void ASReadStreamCallBack
 	{
 		url = [aURL retain];
         self.debug = YES;
-        self.totalBytesDownloaded = 0;
+        self.bytesDownloaded = 0;
 #if defined (USE_PREBUFFER) && USE_PREBUFFER
         _buffers = [[NSMutableArray alloc] initWithCapacity:2048/kAQDefaultBufSize];
         _bufferLock = [[NSLock alloc] init];
@@ -887,7 +887,9 @@ void ASReadStreamCallBack
 		@synchronized(self) {
 			if (seekWasRequested) {
 				[self internalSeekToTime:requestedSeekTime];
-				seekWasRequested = NO;
+                // reset
+                seekWasRequested = NO;
+                self.bytesDownloaded = 0;
 			}
 		}
 		
@@ -1073,6 +1075,7 @@ cleanup:
 		CFReadStreamClose(stream);
 		CFRelease(stream);
 		stream = nil;
+        httpHeaders = nil;
 	}
 
 	//
@@ -1404,17 +1407,20 @@ cleanup:
                 httpHeaders =
                 (NSDictionary *)CFHTTPMessageCopyAllHeaderFields((CFHTTPMessageRef)message);
                 CFRelease(message);
-                self.totalBytesExpected = [(NSString *)[httpHeaders objectForKey:@"Content-Length"] intValue];
                 if (self.debug) NSLog(@"headers %@", httpHeaders);
                 
                 //
                 // Only read the content length if we seeked to time zero, otherwise
                 // we only have a subset of the total bytes.
                 //
-                if (seekByteOffset == 0)
-                {
+                if (seekByteOffset == 0) {
                     fileLength = [[httpHeaders objectForKey:@"Content-Length"] integerValue];
+                    self.bytesExpected = fileLength;
+                } else {
+                    // disable bytesExpected until seeking is fixed
+                    self.bytesExpected = -1;
                 }
+                NSLog(@"self.bytesExpected: %d", self.bytesExpected);
             }
         }
 
@@ -1453,9 +1459,10 @@ cleanup:
 			// Read the bytes from the stream
 			//
 			length = CFReadStreamRead(stream, bytes, kAQDefaultBufSize);
-            self.totalBytesDownloaded += length;
-            if (self.debug) NSLog(@"bytes downloaded: %d", self.totalBytesDownloaded);
-            
+            self.bytesDownloaded += length;
+            if (self.debug){
+                NSLog(@"bytes downloaded: %d", self.bytesDownloaded);
+            }
 			if (length == -1)
 			{
 				[self failWithErrorCode:AS_AUDIO_DATA_NOT_FOUND];
@@ -1516,8 +1523,8 @@ cleanup:
         // send message audioStreamDidFinishDownloading:withBytesDownloaded: to delegate
         //
         if (self.delegate) {
-            if (self.totalBytesDownloaded == self.totalBytesExpected) {
-                [self.delegate audioStreamDidFinishDownloading:self withBytesDownloaded:self.totalBytesDownloaded];
+            if (self.bytesDownloaded == self.bytesExpected) {
+                [self.delegate audioStreamDidFinishDownloading:self withBytesDownloaded:self.bytesDownloaded];
             }
         }
 	}
