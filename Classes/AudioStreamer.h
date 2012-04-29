@@ -31,7 +31,7 @@
 
 #define LOG_QUEUED_BUFFERS 0
 
-#define kNumAQBufs 16			// Number of audio queue buffers we allocate.
+#define kNumAQBufs 3			// Number of audio queue buffers we allocate.
 								// Needs to be big enough to keep audio pipeline
 								// busy (non-zero number of queued buffers) but
 								// not so big that audio takes too long to begin
@@ -193,6 +193,7 @@ extern NSString * const ASPresentAlertWithTitleNotification;
 @property (readonly) NSDictionary *httpHeaders;
 @property (readonly) UInt32 numberOfChannels;
 @property (readonly) BOOL vbr;
+@property (readwrite) BOOL debug;
 
 - (id)initWithURL:(NSURL *)aURL;
 //- (id)initWithURL:(NSURL *)aURL encryption:(EncryptionMethod)method crc32:(uLong)crc32;

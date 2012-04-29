@@ -234,6 +234,7 @@ void ASReadStreamCallBack
 @synthesize httpHeaders;
 @synthesize numberOfChannels;
 @synthesize vbr;
+@synthesize debug = _debug;
 #if defined (USE_PREBUFFER) && USE_PREBUFFER
 @synthesize allBufferPushed = _allBufferPushed;
 @synthesize finishedBuffer = _finishedBuffer;
@@ -258,7 +259,7 @@ void ASReadStreamCallBack
 	if (self != nil)
 	{
 		url = [aURL retain];
-        
+        self.debug = YES;
 #if defined (USE_PREBUFFER) && USE_PREBUFFER
         _buffers = [[NSMutableArray alloc] initWithCapacity:2048/kAQDefaultBufSize];
         _bufferLock = [[NSLock alloc] init];
@@ -1399,7 +1400,7 @@ cleanup:
                 httpHeaders =
                 (NSDictionary *)CFHTTPMessageCopyAllHeaderFields((CFHTTPMessageRef)message);
                 CFRelease(message);
-                //NSLog(@"headers %@", httpHeaders);
+                if (self.debug) NSLog(@"headers %@", httpHeaders);
                 
                 //
                 // Only read the content length if we seeked to time zero, otherwise
@@ -1447,6 +1448,7 @@ cleanup:
 			// Read the bytes from the stream
 			//
 			length = CFReadStreamRead(stream, bytes, kAQDefaultBufSize);
+            if (self.debug) NSLog(@"bytes read: %ld", length);
 			if (length == -1)
 			{
 				[self failWithErrorCode:AS_AUDIO_DATA_NOT_FOUND];
