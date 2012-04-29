@@ -1522,10 +1522,8 @@ cleanup:
         //
         // send message audioStreamDidFinishDownloading:withBytesDownloaded: to delegate
         //
-        if (self.delegate) {
-            if (self.bytesDownloaded == self.bytesExpected) {
-                [self.delegate audioStreamDidFinishDownloading:self withBytesDownloaded:self.bytesDownloaded];
-            }
+        if (self.bytesDownloaded == self.bytesExpected) {
+            [self.delegate audioStreamDidFinishDownloading:self withBytesDownloaded:self.bytesDownloaded];
         }
 	}
 }
