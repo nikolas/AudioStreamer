@@ -11,7 +11,6 @@
 //  this copyright and permission notice. Attribution in compiled projects is
 //  appreciated but not required.
 //
-//#define SHOUTCAST_METADATA
 
 #if TARGET_OS_IPHONE			
 #import <UIKit/UIKit.h>
@@ -108,9 +107,6 @@ typedef enum
 
 extern NSString * const ASStatusChangedNotification;
 extern NSString * const ASPresentAlertWithTitleNotification;
-#ifdef SHOUTCAST_METADATA
-extern NSString * const ASUpdateMetadataNotification;
-#endif
 
 @interface AudioStreamer : NSObject
 {
@@ -174,15 +170,6 @@ extern NSString * const ASUpdateMetadataNotification;
 	double lastProgress;		// last calculated progress point
 	UInt32 numberOfChannels;	// Number of audio channels in the stream (1 = mono, 2 = stereo)
 
-#ifdef SHOUTCAST_METADATA
-	BOOL foundIcyStart;
-	BOOL foundIcyEnd;
-	BOOL parsedHeaders;
-	unsigned int metaDataInterval;					// how many data bytes between meta data
-	unsigned int metaDataBytesRemaining;	// how many bytes of metadata remain to be read
-	unsigned int dataBytesRead;							// how many bytes of data have been read
-	NSMutableString *metaDataString;			// the metaDataString
-#endif
 	BOOL vbr; // indicates VBR (or not) stream
     
 
