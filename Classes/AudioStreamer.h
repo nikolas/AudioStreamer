@@ -108,7 +108,7 @@ typedef enum
 extern NSString * const ASStatusChangedNotification;
 extern NSString * const ASPresentAlertWithTitleNotification;
 
-@protocol AudioStreamerProtocol
+@protocol AudioStreamerDelegate
 @optional
 //
 // this method does not work with seeking
@@ -206,7 +206,7 @@ extern NSString * const ASPresentAlertWithTitleNotification;
 @property (readwrite) BOOL debug;
 @property (readwrite) int bytesDownloaded;
 @property (readwrite) int bytesExpected; // is set to -1 if seekToTime is called as it's unreliable
-@property (retain, nonatomic) id <AudioStreamerProtocol> delegate;
+@property (retain, nonatomic) id <AudioStreamerDelegate> delegate;
 
 - (id)initWithURL:(NSURL *)aURL;
 //- (id)initWithURL:(NSURL *)aURL encryption:(EncryptionMethod)method crc32:(uLong)crc32;

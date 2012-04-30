@@ -381,7 +381,7 @@
 	[super dealloc];
 }
 
-#pragma mark AudioStreamerProtocol Implementation
+#pragma mark AudioStreamerDelegate Implementation
 
 -(void)audioStreamDidFinishDownloading:(id)sender
                    withBytesDownloaded:(int)numBytes
