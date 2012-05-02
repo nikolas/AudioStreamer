@@ -1082,7 +1082,18 @@ cleanup:
 		[self failWithErrorCode:AS_AUDIO_QUEUE_STOP_FAILED];
 		return;
 	}
-
+    
+    //
+    // clear buffer of old data
+    //
+    while ([_buffers count] > 0) {
+        if ([_bufferLock tryLock]) {
+            [_buffers removeAllObjects];
+            [_bufferLock unlock];
+        } else {
+            if (self.debug) NSLog(@"internalSeekToTime: locking buffer failed");
+        }
+    }
 	//
 	// Re-open the file stream. It will request a byte-range starting at
 	// seekByteOffset.
@@ -1405,12 +1416,11 @@ cleanup:
                 // Only read the content length if we seeked to time zero, otherwise
                 // we only have a subset of the total bytes.
                 //
+                // (but we do want the content length for bytesExpected regardless)
+                //
+                self.bytesExpected = [[httpHeaders objectForKey:@"Content-Length"] integerValue];
                 if (seekByteOffset == 0) {
-                    fileLength = [[httpHeaders objectForKey:@"Content-Length"] integerValue];
-                    self.bytesExpected = fileLength;
-                } else {
-                    // disable bytesExpected until seeking is fixed
-                    self.bytesExpected = -1;
+                    fileLength = self.bytesExpected;
                 }
                 NSLog(@"self.bytesExpected: %d", self.bytesExpected);
             }
@@ -2256,7 +2266,7 @@ cleanup:
 			}
 			else
 			{
-				NSLog(@"AudioQueue changed state in unexpected way.");
+				NSLog(@"AudioQueue changed state in unexpected way. (state = %d)", state);
 			}
 		}
 	}
