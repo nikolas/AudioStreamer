@@ -13,4 +13,4 @@ CHANGES
   - Level metering code
 
 - Improvements
-  - Originally, after seeking, the audio from the old position would still play then suddenly cut to the new position, which was a bit jarring.
+  - Originally, after seeking, the audio from the old position would still play then suddenly cut to the new position, which was a bit jarring. Now, the audio cuts out immediately and begins playing once data has been buffered at the new position.
