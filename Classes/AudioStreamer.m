@@ -2231,6 +2231,7 @@ cleanup:
 			if (state == AS_STOPPING)
 			{
 				self.state = AS_STOPPED;
+                [self.delegate audioStreamDidFinishPlaying:self];
 			}
 			else if (state == AS_WAITING_FOR_QUEUE_TO_START)
 			{

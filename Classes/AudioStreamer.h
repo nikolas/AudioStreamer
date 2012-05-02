@@ -114,6 +114,7 @@ extern NSString * const ASPresentAlertWithTitleNotification;
 // this method does not work with seeking
 //
 -(void)audioStreamDidFinishDownloading:(id)sender withBytesDownloaded:(int)numBytes; // not final
+-(void)audioStreamDidFinishPlaying:(id)sender;
 
 @end
 
