@@ -25,10 +25,6 @@
 #include <pthread.h>
 #include <AudioToolbox/AudioToolbox.h>
 
-
-#define USE_PREBUFFER 1
-
-
 #define LOG_QUEUED_BUFFERS 0
 
 #define kNumAQBufs 3			// Number of audio queue buffers we allocate.
@@ -183,15 +179,12 @@ extern NSString * const ASPresentAlertWithTitleNotification;
 
 	BOOL vbr; // indicates VBR (or not) stream
     
-
-#if defined (USE_PREBUFFER) && USE_PREBUFFER
     NSLock * _bufferLock;
     NSLock * _audioStreamLock;
     NSMutableArray * _buffers;
     NSThread * _bufferPushingThread;
     BOOL _allBufferPushed;
     BOOL _finishedBuffer;
-#endif
 }
 
 @property AudioStreamerErrorCode errorCode;

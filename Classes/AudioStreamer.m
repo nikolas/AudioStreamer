@@ -60,11 +60,10 @@ NSString * const AS_AUDIO_MEMORY_ALLOC_FAILED_STRING = @"Alloc memory failed";
 
 @interface AudioStreamer ()
 @property (readwrite) AudioStreamerState state;
-#if defined (USE_PREBUFFER) && USE_PREBUFFER
 @property (readwrite) BOOL allBufferPushed;
 @property (readwrite) BOOL finishedBuffer;
+
 - (void)pushingBufferThread:(id)object;
-#endif
 - (void)handlePropertyChangeForFileStream:(AudioFileStreamID)inAudioFileStream
 	fileStreamPropertyID:(AudioFileStreamPropertyID)inPropertyID
 	ioFlags:(UInt32 *)ioFlags;
@@ -238,10 +237,9 @@ void ASReadStreamCallBack
 @synthesize bytesDownloaded = _bytesDownloaded;
 @synthesize bytesExpected = _bytesExpected;
 @synthesize delegate = _delegate;
-#if defined (USE_PREBUFFER) && USE_PREBUFFER
 @synthesize allBufferPushed = _allBufferPushed;
 @synthesize finishedBuffer = _finishedBuffer;
-#endif
+
 - (void)setVolume:(float)vol {
     @synchronized(self) {
         if (audioQueue) {
@@ -264,13 +262,12 @@ void ASReadStreamCallBack
 		url = [aURL retain];
         self.debug = YES;
         self.bytesDownloaded = 0;
-#if defined (USE_PREBUFFER) && USE_PREBUFFER
+
         _buffers = [[NSMutableArray alloc] initWithCapacity:2048/kAQDefaultBufSize];
         _bufferLock = [[NSLock alloc] init];
         _audioStreamLock = [[NSLock alloc] init];
         self.allBufferPushed = NO;
         self.finishedBuffer = NO;
-#endif
 	}
 	return self;
 }
@@ -284,12 +281,11 @@ void ASReadStreamCallBack
 {
 	[self stop];
 	[url release];
-    
-#if defined (USE_PREBUFFER) && USE_PREBUFFER
+
     RELEASE_SAFELY(_buffers);
     RELEASE_SAFELY(_bufferLock);
     RELEASE_SAFELY(_audioStreamLock);
-#endif
+
 	[super dealloc];
 }
 
@@ -910,11 +906,8 @@ void ASReadStreamCallBack
 		}
         [pool drain];
         [NSThread sleepForTimeInterval:0.01];
-#if defined (USE_PREBUFFER) && USE_PREBUFFER
+
 	} while ((self.allBufferPushed || isRunning || [self isFinishing]) && ![self runLoopShouldExit]);
-#else
-    } while (isRunning && ![self runLoopShouldExit]);
-#endif
 	
 cleanup:
 
@@ -1318,9 +1311,8 @@ cleanup:
 	}
 	else if (eventType == kCFStreamEventEndEncountered)
 	{
-#if defined (USE_PREBUFFER) && USE_PREBUFFER
         self.finishedBuffer = YES;
-#endif
+
         if ([url isFileURL]) {
             @synchronized(self)
             {
@@ -1475,7 +1467,6 @@ cleanup:
 			}
 		}
 
-#if defined (USE_PREBUFFER) && USE_PREBUFFER
         if (![url isFileURL]) {
             NSData * data = [[NSData alloc] initWithBytes:bytes length:length];
             [_bufferLock lock];
@@ -1493,7 +1484,6 @@ cleanup:
             [NSThread sleepForTimeInterval:0.01];
         }
 		else {
-#endif
             if (discontinuous)
             {
                 [_audioStreamLock lock];
@@ -1516,9 +1506,7 @@ cleanup:
                     return;
                 }
             }
-#if defined (USE_PREBUFFER) && USE_PREBUFFER
         }
-#endif
         //
         // send message audioStreamDidFinishDownloading:withBytesDownloaded: to delegate
         //
@@ -1529,7 +1517,6 @@ cleanup:
 	}
 }
 
-#if defined (USE_PREBUFFER) && USE_PREBUFFER
 - (void)pushingBufferThread:(id)object
 {
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
@@ -1656,7 +1643,6 @@ cleanup:
     
     [pool drain];
 }
-#endif
 //
 // enqueueBuffer
 //
