@@ -389,6 +389,11 @@
     NSLog(@"delegate test, numBytes = %d", numBytes); 
 }
 
+-(void)audioStreamDidFinishPlaying:(id)sender
+{
+    NSLog(@"audioStreamDidFinishPlaying delegation received");
+}
+
 #pragma mark Remote Control Events
 /* The iPod controls will send these events when the app is in the background */
 - (void)remoteControlReceivedWithEvent:(UIEvent *)event {

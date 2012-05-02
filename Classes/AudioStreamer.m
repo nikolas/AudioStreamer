@@ -1522,7 +1522,8 @@ cleanup:
         //
         // send message audioStreamDidFinishDownloading:withBytesDownloaded: to delegate
         //
-        if (self.bytesDownloaded == self.bytesExpected) {
+        if ([self.delegate respondsToSelector:@selector(audioStreamDidFinishDownloading:withBytesDownloaded:)] && 
+            (self.bytesDownloaded == self.bytesExpected)) {
             [self.delegate audioStreamDidFinishDownloading:self withBytesDownloaded:self.bytesDownloaded];
         }
 	}
@@ -2231,7 +2232,9 @@ cleanup:
 			if (state == AS_STOPPING)
 			{
 				self.state = AS_STOPPED;
-                [self.delegate audioStreamDidFinishPlaying:self];
+                if ([self.delegate respondsToSelector:@selector(audioStreamDidFinishPlaying:)]) {
+                    [self.delegate audioStreamDidFinishPlaying:self];
+                }
 			}
 			else if (state == AS_WAITING_FOR_QUEUE_TO_START)
 			{
