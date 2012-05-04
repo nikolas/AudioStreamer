@@ -1150,8 +1150,9 @@ cleanup:
 			}
 			else if (err)
 			{
-                if (self.shouldStartPlaying) [self failWithErrorCode:AS_GET_AUDIO_TIME_FAILED];
-                else return 0.0;
+                //if (self.shouldStartPlaying) [self failWithErrorCode:AS_GET_AUDIO_TIME_FAILED];
+                //else return 0.0;
+                return 0.0;
 			}
 
 			double progress = seekTime + queueTime.mSampleTime / sampleRate;
