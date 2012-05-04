@@ -1150,7 +1150,8 @@ cleanup:
 			}
 			else if (err)
 			{
-				[self failWithErrorCode:AS_GET_AUDIO_TIME_FAILED];
+                if (self.shouldStartPlaying) [self failWithErrorCode:AS_GET_AUDIO_TIME_FAILED];
+                else return 0.0;
 			}
 
 			double progress = seekTime + queueTime.mSampleTime / sampleRate;
@@ -1719,17 +1720,16 @@ cleanup:
 			//
 			if (state == AS_FLUSHING_EOF || buffersUsed == kNumAQBufs - 1)
 			{
+#if TARGET_OS_IPHONE                    
+                if ([[UIDevice currentDevice] respondsToSelector:@selector(isMultitaskingSupported)]) {
+                    bgTaskId = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:NULL];
+                }
+#endif	
 				if (self.state == AS_BUFFERING)
 				{
-                    NSLog(@"[enqueueBuffer] HERE1");
                     if (self.shouldStartPlaying) {
-                        NSLog(@"[enqueueBuffer] HERE3");
                         err = AudioQueueStart(audioQueue, NULL);
-#if TARGET_OS_IPHONE                    
-                        if ([[UIDevice currentDevice] respondsToSelector:@selector(isMultitaskingSupported)]) {
-                            bgTaskId = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:NULL];
-                        }
-#endif					
+				
                         if (err)
                         {
                             [self failWithErrorCode:AS_AUDIO_QUEUE_START_FAILED];
@@ -1737,7 +1737,6 @@ cleanup:
                         }
                         self.state = AS_PLAYING;
                     } else {
-                        NSLog(@"[enqueueBuffer] HERE4");
                         self.state = AS_PAUSED;
                     }
 
@@ -1745,20 +1744,19 @@ cleanup:
                 }
 				else
 				{
-                    NSLog(@"[enqueueBuffer] HERE2");
 					self.state = AS_WAITING_FOR_QUEUE_TO_START;
 
-					err = AudioQueueStart(audioQueue, NULL);
-#if TARGET_OS_IPHONE 
-					if ([[UIDevice currentDevice] respondsToSelector:@selector(isMultitaskingSupported)]) {
-						bgTaskId = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:NULL];
-					}
-#endif					
-					if (err)
-					{
-						[self failWithErrorCode:AS_AUDIO_QUEUE_START_FAILED];
-						return;
-					}
+					if (self.shouldStartPlaying) {
+                        err = AudioQueueStart(audioQueue, NULL);
+		
+                        if (err)
+                        {
+                            [self failWithErrorCode:AS_AUDIO_QUEUE_START_FAILED];
+                            return;
+                        }
+                    } else {
+                        self.state = AS_PAUSED;
+                    }
 				}
 			}
 		}
