@@ -62,6 +62,7 @@ NSString * const AS_AUDIO_MEMORY_ALLOC_FAILED_STRING = @"Alloc memory failed";
 @property (readwrite) AudioStreamerState state;
 @property (readwrite) BOOL allBufferPushed;
 @property (readwrite) BOOL finishedBuffer;
+@property (readwrite) BOOL shouldStartPlaying;
 
 - (void)pushingBufferThread:(id)object;
 - (void)handlePropertyChangeForFileStream:(AudioFileStreamID)inAudioFileStream
@@ -239,6 +240,7 @@ void ASReadStreamCallBack
 @synthesize delegate = _delegate;
 @synthesize allBufferPushed = _allBufferPushed;
 @synthesize finishedBuffer = _finishedBuffer;
+@synthesize shouldStartPlaying = _shouldStartPlaying;
 
 - (void)setVolume:(float)vol {
     @synchronized(self) {
@@ -268,6 +270,7 @@ void ASReadStreamCallBack
         _audioStreamLock = [[NSLock alloc] init];
         self.allBufferPushed = NO;
         self.finishedBuffer = NO;
+        self.shouldStartPlaying = NO;
 	}
 	return self;
 }
@@ -1213,6 +1216,12 @@ cleanup:
 	return (fileLength - dataOffset) / (calculatedBitRate * 0.125);
 }
 
+- (void)play
+{
+    self.shouldStartPlaying = YES;
+    [self pause];
+}
+
 //
 // pause
 //
@@ -1222,6 +1231,7 @@ cleanup:
 {
 	@synchronized(self)
 	{
+        if (self.debug) NSLog(@"[pause] state = %d", state);
 		if (state == AS_PLAYING || state == AS_BUFFERING) //if is buffering, the user pauses it
 		{
 			err = AudioQueuePause(audioQueue);
@@ -1668,6 +1678,7 @@ cleanup:
 {
 	@synchronized(self)
 	{
+        if (self.debug) NSLog(@"enqueueBuffer");
 		if ([self isFinishing] || stream == 0)
 		{
 			return;
@@ -1695,12 +1706,12 @@ cleanup:
 			return;
 		}
 
-		
 		if (state == AS_BUFFERING ||
 			state == AS_WAITING_FOR_DATA ||
 			state == AS_FLUSHING_EOF ||
 			(state == AS_STOPPED && stopReason == AS_STOPPING_TEMPORARILY))
 		{
+            if (self.debug) NSLog(@"[enqueueBuffer] state = %d", state);
 			//
 			// Fill all the buffers before starting. This ensures that the
 			// AudioFileStream stays a small amount ahead of the AudioQueue to
@@ -1710,21 +1721,31 @@ cleanup:
 			{
 				if (self.state == AS_BUFFERING)
 				{
-					err = AudioQueueStart(audioQueue, NULL);
+                    NSLog(@"[enqueueBuffer] HERE1");
+                    if (self.shouldStartPlaying) {
+                        NSLog(@"[enqueueBuffer] HERE3");
+                        err = AudioQueueStart(audioQueue, NULL);
 #if TARGET_OS_IPHONE                    
-					if ([[UIDevice currentDevice] respondsToSelector:@selector(isMultitaskingSupported)]) {
-						bgTaskId = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:NULL];
-					}
+                        if ([[UIDevice currentDevice] respondsToSelector:@selector(isMultitaskingSupported)]) {
+                            bgTaskId = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:NULL];
+                        }
 #endif					
-					if (err)
-					{
-						[self failWithErrorCode:AS_AUDIO_QUEUE_START_FAILED];
-						return;
-					}
-					self.state = AS_PLAYING;
-				}
+                        if (err)
+                        {
+                            [self failWithErrorCode:AS_AUDIO_QUEUE_START_FAILED];
+                            return;
+                        }
+                        self.state = AS_PLAYING;
+                    } else {
+                        NSLog(@"[enqueueBuffer] HERE4");
+                        self.state = AS_PAUSED;
+                    }
+
+                
+                }
 				else
 				{
+                    NSLog(@"[enqueueBuffer] HERE2");
 					self.state = AS_WAITING_FOR_QUEUE_TO_START;
 
 					err = AudioQueueStart(audioQueue, NULL);

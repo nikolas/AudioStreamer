@@ -143,6 +143,7 @@
 
 	NSURL *url = [NSURL URLWithString:escapedValue];
 	streamer = [[AudioStreamer alloc] initWithURL:url];
+    [streamer start];
     
     streamer.delegate = self;
 	
@@ -171,6 +172,8 @@
 	[volumeView sizeToFit];
 	
 	[self setButtonImage:[UIImage imageNamed:@"playbutton.png"]];
+    
+    [self createStreamer];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -250,20 +253,29 @@
 // Parameters:
 //    sender - normally, the play/stop button.
 //
+//- (IBAction)buttonPressed:(id)sender
+//{
+//	if ([button.currentImage isEqual:[UIImage imageNamed:@"playbutton.png"]] || [button.currentImage isEqual:[UIImage imageNamed:@"pausebutton.png"]])
+//	{
+//		[downloadSourceField resignFirstResponder];
+//		
+//		[self createStreamer];
+//		[self setButtonImage:[UIImage imageNamed:@"loadingbutton.png"]];
+//		[streamer start];
+//	}
+//	else
+//	{
+//		[streamer stop];
+//	}
+//}
+
 - (IBAction)buttonPressed:(id)sender
 {
-	if ([button.currentImage isEqual:[UIImage imageNamed:@"playbutton.png"]] || [button.currentImage isEqual:[UIImage imageNamed:@"pausebutton.png"]])
-	{
-		[downloadSourceField resignFirstResponder];
-		
-		[self createStreamer];
-		[self setButtonImage:[UIImage imageNamed:@"loadingbutton.png"]];
-		[streamer start];
-	}
-	else
-	{
-		[streamer stop];
-	}
+    if ([button.currentImage isEqual:[UIImage imageNamed:@"playbutton.png"]]) {
+        [streamer play];
+    } else if ([button.currentImage isEqual:[UIImage imageNamed:@"pausebutton.png"]]) {
+        [streamer pause];
+    }
 }
 
 //
@@ -302,12 +314,12 @@
 	else if ([streamer isPlaying])
 	{
 		if (appDelegate.uiIsVisible) {
-			[self setButtonImage:[UIImage imageNamed:@"stopbutton.png"]];
+			[self setButtonImage:[UIImage imageNamed:@"pauseutton.png"]];
 		}
 	}
 	else if ([streamer isPaused]) {
 		if (appDelegate.uiIsVisible) {
-			[self setButtonImage:[UIImage imageNamed:@"pausebutton.png"]];
+			[self setButtonImage:[UIImage imageNamed:@"playbutton.png"]];
 		}
 	}
 	else if ([streamer isIdle])

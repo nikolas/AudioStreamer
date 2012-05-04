@@ -54,15 +54,15 @@
 typedef enum
 {
 	AS_INITIALIZED = 0,
-	AS_STARTING_FILE_THREAD,
-	AS_WAITING_FOR_DATA,
-	AS_FLUSHING_EOF,
-	AS_WAITING_FOR_QUEUE_TO_START,
-	AS_PLAYING,
-	AS_BUFFERING,
-	AS_STOPPING,
-	AS_STOPPED,
-	AS_PAUSED
+	AS_STARTING_FILE_THREAD, // 1
+	AS_WAITING_FOR_DATA, // 2
+	AS_FLUSHING_EOF, // 3
+	AS_WAITING_FOR_QUEUE_TO_START, // 4
+	AS_PLAYING, // 5
+	AS_BUFFERING, // 6
+	AS_STOPPING, // 7
+	AS_STOPPED, // 8
+	AS_PAUSED // 9
 } AudioStreamerState;
 
 typedef enum
@@ -206,6 +206,7 @@ extern NSString * const ASPresentAlertWithTitleNotification;
 //- (id)initWithURL:(NSURL *)aURL encryption:(EncryptionMethod)method crc32:(uLong)crc32;
 - (void)start;
 - (void)stop;
+- (void)play;
 - (void)pause;
 - (BOOL)isPlaying;
 - (BOOL)isPaused;
