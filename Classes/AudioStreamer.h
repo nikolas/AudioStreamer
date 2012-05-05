@@ -105,10 +105,9 @@ extern NSString * const ASStatusChangedNotification;
 extern NSString * const ASPresentAlertWithTitleNotification;
 
 @protocol AudioStreamerDelegate <NSObject>
+
 @optional
-//
-// this method does not work with seeking
-//
+
 -(void)audioStreamDidFinishDownloading:(id)sender withBytesDownloaded:(int)numBytes; // not final
 -(void)audioStreamDidFinishPlaying:(id)sender;
 
@@ -120,7 +119,7 @@ extern NSString * const ASPresentAlertWithTitleNotification;
 #if TARGET_OS_IPHONE    
 	UIBackgroundTaskIdentifier bgTaskId;
 #endif    
-	NSURL *url;
+	//NSURL *url; // now a property
 
 	//
 	// Special threading consideration:
@@ -199,7 +198,9 @@ extern NSString * const ASPresentAlertWithTitleNotification;
 @property (readonly) BOOL vbr;
 @property (readwrite) BOOL debug;
 @property (readwrite) int bytesDownloaded;
-@property (readwrite) int bytesExpected; // is set to -1 if seekToTime is called as it's unreliable
+@property (readwrite) int bytesExpected;
+@property (strong, nonatomic) NSURL *url;
+
 @property (assign, nonatomic) id <AudioStreamerDelegate> delegate;
 
 - (id)initWithURL:(NSURL *)aURL;

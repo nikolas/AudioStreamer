@@ -241,6 +241,7 @@ void ASReadStreamCallBack
 @synthesize allBufferPushed = _allBufferPushed;
 @synthesize finishedBuffer = _finishedBuffer;
 @synthesize shouldStartPlaying = _shouldStartPlaying;
+@synthesize url = _url;
 
 - (void)setVolume:(float)vol {
     @synchronized(self) {
@@ -261,7 +262,7 @@ void ASReadStreamCallBack
 	self = [super init];
 	if (self != nil)
 	{
-		url = [aURL retain];
+		self.url = aURL;
         self.debug = YES;
         self.bytesDownloaded = 0;
 
@@ -283,7 +284,7 @@ void ASReadStreamCallBack
 - (void)dealloc
 {
 	[self stop];
-	[url release];
+	//[url release];
 
     RELEASE_SAFELY(_buffers);
     RELEASE_SAFELY(_bufferLock);
@@ -708,14 +709,14 @@ void ASReadStreamCallBack
 		NSAssert([[NSThread currentThread] isEqual:internalThread],
 			@"File stream download must be started on the internalThread");
 		NSAssert(stream == nil, @"Download stream already initialized");
-        if ([url isFileURL]) {
-            stream = CFReadStreamCreateWithFile(NULL, (CFURLRef)url);
+        if ([self.url isFileURL]) {
+            stream = CFReadStreamCreateWithFile(NULL, (CFURLRef)self.url);
         }
         else {
             //
             // Create the HTTP GET request
             //
-            CFHTTPMessageRef message= CFHTTPMessageCreateRequest(NULL, (CFStringRef)@"GET", (CFURLRef)url, kCFHTTPVersion1_1);
+            CFHTTPMessageRef message= CFHTTPMessageCreateRequest(NULL, (CFStringRef)@"GET", (CFURLRef)self.url, kCFHTTPVersion1_1);
             //
             // If we are creating this request to seek to a location, set the
             // requested byte range in the headers.
@@ -749,7 +750,7 @@ void ASReadStreamCallBack
             //
             // Handle SSL connections
             //
-            if( [[url absoluteString] rangeOfString:@"https"].location != NSNotFound )
+            if( [[self.url absoluteString] rangeOfString:@"https"].location != NSNotFound )
             {
                 NSDictionary *sslSettings =
 				[NSDictionary dictionaryWithObjectsAndKeys:
@@ -1336,7 +1337,7 @@ cleanup:
 	{
         self.finishedBuffer = YES;
 
-        if ([url isFileURL]) {
+        if ([self.url isFileURL]) {
             @synchronized(self)
             {
                 if ([self isFinishing])
@@ -1407,10 +1408,10 @@ cleanup:
 	}
 	else if (eventType == kCFStreamEventHasBytesAvailable)
 	{
-        if ([url isFileURL]) {
+        if ([self.url isFileURL]) {
             NSFileManager * mgr = [[NSFileManager alloc] init];
             NSError * error = nil;
-            NSDictionary * attr = [mgr attributesOfItemAtPath:[url path] error:&error];
+            NSDictionary * attr = [mgr attributesOfItemAtPath:[self.url path] error:&error];
             fileLength = [attr fileSize];
             RELEASE_SAFELY(mgr)
         }
@@ -1489,7 +1490,7 @@ cleanup:
 			}
 		}
 
-        if (![url isFileURL]) {
+        if (![self.url isFileURL]) {
             NSData * data = [[NSData alloc] initWithBytes:bytes length:length];
             [_bufferLock lock];
             [_buffers addObject:data];
