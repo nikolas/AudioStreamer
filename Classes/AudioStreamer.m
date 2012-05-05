@@ -1274,12 +1274,15 @@ cleanup:
 //
 - (void)stop
 {
-    if (!self.shouldStartPlaying) {
-        // if we've never started playing, we shouldn't stop
-        return;
-    }
 	@synchronized(self)
 	{
+        if (self.debug) NSLog(@"[stop] state = %d", state);
+        
+        if (!self.shouldStartPlaying || state == AS_STOPPING || state == AS_STOPPED) {
+            // if never started, or is already stopping/stopped, don't try to stop again
+            return;
+        }
+        
 		if (audioQueue &&
 			(self.state == AS_PLAYING || self.state == AS_PAUSED ||
 				self.state == AS_BUFFERING || self.state == AS_WAITING_FOR_QUEUE_TO_START))
@@ -2250,8 +2253,8 @@ cleanup:
 			if (state == AS_STOPPING)
 			{
 				self.state = AS_STOPPED;
-                if ([self.delegate respondsToSelector:@selector(audioStreamDidFinishPlaying:)]) {
-                    [self.delegate audioStreamDidFinishPlaying:self];
+                if ([self.delegate respondsToSelector:@selector(audioStreamDidFinishPlaying:withReason:)]) {
+                    [self.delegate audioStreamDidFinishPlaying:self withReason:stopReason];
                 }
 			}
 			else if (state == AS_WAITING_FOR_QUEUE_TO_START)

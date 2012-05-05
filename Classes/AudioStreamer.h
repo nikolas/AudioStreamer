@@ -109,7 +109,7 @@ extern NSString * const ASPresentAlertWithTitleNotification;
 @optional
 
 -(void)audioStreamDidFinishDownloading:(id)sender withBytesDownloaded:(int)numBytes; // not final
--(void)audioStreamDidFinishPlaying:(id)sender;
+-(void)audioStreamDidFinishPlaying:(id)sender withReason:(AudioStreamerStopReason)stopReason;
 
 @end
 
