@@ -191,7 +191,7 @@ extern NSString * const ASPresentAlertWithTitleNotification;
 @property (readonly) AudioStreamerStopReason stopReason;
 @property (readonly) double progress;
 @property (readonly) double bufferFillPercentage;
-@property (readonly) double duration;
+@property (readwrite, nonatomic) double duration;
 @property (readwrite) UInt32 bitRate;
 @property (readonly) NSDictionary *httpHeaders;
 @property (readonly) UInt32 numberOfChannels;
@@ -204,6 +204,7 @@ extern NSString * const ASPresentAlertWithTitleNotification;
 @property (assign, nonatomic) id <AudioStreamerDelegate> delegate;
 
 - (id)initWithURL:(NSURL *)aURL;
+- (id)initWithURL:(NSURL *)aURL withStreamDurationInSeconds:(double)duration;
 //- (id)initWithURL:(NSURL *)aURL encryption:(EncryptionMethod)method crc32:(uLong)crc32;
 - (void)start;
 - (void)stop;

@@ -63,6 +63,7 @@ NSString * const AS_AUDIO_MEMORY_ALLOC_FAILED_STRING = @"Alloc memory failed";
 @property (readwrite) BOOL allBufferPushed;
 @property (readwrite) BOOL finishedBuffer;
 @property (readwrite) BOOL shouldStartPlaying;
+@property (readwrite) BOOL shouldCalcDuration;
 
 - (void)pushingBufferThread:(id)object;
 - (void)handlePropertyChangeForFileStream:(AudioFileStreamID)inAudioFileStream
@@ -242,6 +243,8 @@ void ASReadStreamCallBack
 @synthesize finishedBuffer = _finishedBuffer;
 @synthesize shouldStartPlaying = _shouldStartPlaying;
 @synthesize url = _url;
+@synthesize duration = _duration;
+@synthesize shouldCalcDuration = _shouldCalcDuration;
 
 - (void)setVolume:(float)vol {
     @synchronized(self) {
@@ -272,8 +275,20 @@ void ASReadStreamCallBack
         self.allBufferPushed = NO;
         self.finishedBuffer = NO;
         self.shouldStartPlaying = NO;
+        self.shouldCalcDuration = YES; // calculate duration if not specified
 	}
 	return self;
+}
+
+- (id)initWithURL:(NSURL *)aURL withStreamDurationInSeconds:(double)duration
+{
+    self = [self initWithURL:aURL];
+    if (self) {
+        self.shouldCalcDuration = NO;
+        self.duration = duration;
+    }
+    
+    return self;
 }
 
 //
@@ -1206,14 +1221,19 @@ cleanup:
 //
 - (double)duration
 {
-	double calculatedBitRate = [self calculatedBitRate];
-	
-	if (calculatedBitRate == 0 || fileLength == 0)
-	{
-		return 0.0;
-	}
-	
-	return (fileLength - dataOffset) / (calculatedBitRate * 0.125);
+    if (self.shouldCalcDuration) {
+        double calculatedBitRate = [self calculatedBitRate];
+        
+        if (calculatedBitRate == 0 || fileLength == 0)
+        {
+            return 0.0;
+        }
+        
+        return (fileLength - dataOffset) / (calculatedBitRate * 0.125);
+    } else {
+        // return user specified duration
+        return _duration;
+    }
 }
 
 - (void)play
