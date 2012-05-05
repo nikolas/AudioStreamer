@@ -991,14 +991,9 @@ cleanup:
 {
 	@synchronized (self)
 	{
-		if (state == AS_PAUSED)
-		{
-			[self pause];
-		}
-		else if (state == AS_INITIALIZED)
-		{
+        if (state == AS_INITIALIZED) {
 			NSAssert([[NSThread currentThread] isEqual:[NSThread mainThread]],
-				@"Playback can only be started from the main thread.");
+				@"Object can only be started from the main thread.");
 			notificationCenter =
 				[[NSNotificationCenter defaultCenter] retain];
 			self.state = AS_STARTING_FILE_THREAD;
@@ -1009,7 +1004,9 @@ cleanup:
 					object:nil];
 			[internalThread setName:@"InternalThread"];
 			[internalThread start];
-		}
+		} else {
+            if (self.debug) NSLog(@"object has already been started");
+        }
 	}
 }
 
