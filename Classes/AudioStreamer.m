@@ -1274,6 +1274,10 @@ cleanup:
 //
 - (void)stop
 {
+    if (!self.shouldStartPlaying) {
+        // if we've never started playing, we shouldn't stop
+        return;
+    }
 	@synchronized(self)
 	{
 		if (audioQueue &&
