@@ -298,6 +298,7 @@ void ASReadStreamCallBack
 //
 - (void)dealloc
 {
+    if (self.debug) NSLog(@"[dealloc] self = %@", self);
 	[self stop];
 	//[url release];
 
