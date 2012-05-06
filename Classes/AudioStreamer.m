@@ -1131,6 +1131,7 @@ cleanup:
 {
 	@synchronized(self)
 	{
+        if (self.debug) NSLog(@"[seekToTime] newSeekTime = %f", newSeekTime);
 		seekWasRequested = YES;
 		requestedSeekTime = newSeekTime;
 	}
@@ -1501,7 +1502,7 @@ cleanup:
 			length = CFReadStreamRead(stream, bytes, kAQDefaultBufSize);
             self.bytesDownloaded += length;
             if (self.debug){
-                NSLog(@"bytes downloaded: %d", self.bytesDownloaded);
+                //NSLog(@"bytes downloaded: %d", self.bytesDownloaded);
             }
 			if (length == -1)
 			{
