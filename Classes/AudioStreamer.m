@@ -284,8 +284,11 @@ void ASReadStreamCallBack
 {
     self = [self initWithURL:aURL];
     if (self) {
-        self.shouldCalcDuration = NO;
-        self.duration = duration;
+        // calc duration if duration wasn't specified
+        if (duration) {
+            self.shouldCalcDuration = NO;
+            self.duration = duration;
+        }
     }
     
     return self;
