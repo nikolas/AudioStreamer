@@ -7,6 +7,7 @@ CHANGES
 
 - Added
   - Delegation (see the AudioStreamerDelegate protocol)
+  - Ability specify the stream duration (see: initWithURL:withDurationInSeconds:)
   
 - Removed
   - Shoutcast support

@@ -280,7 +280,7 @@ void ASReadStreamCallBack
 	return self;
 }
 
-- (id)initWithURL:(NSURL *)aURL withStreamDurationInSeconds:(double)duration
+- (id)initWithURL:(NSURL *)aURL withDurationInSeconds:(double)duration
 {
     self = [self initWithURL:aURL];
     if (self) {

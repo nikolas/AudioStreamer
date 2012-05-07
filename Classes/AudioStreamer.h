@@ -204,7 +204,7 @@ extern NSString * const ASPresentAlertWithTitleNotification;
 @property (assign, nonatomic) id <AudioStreamerDelegate> delegate;
 
 - (id)initWithURL:(NSURL *)aURL;
-- (id)initWithURL:(NSURL *)aURL withStreamDurationInSeconds:(double)duration;
+- (id)initWithURL:(NSURL *)aURL withDurationInSeconds:(double)duration;
 //- (id)initWithURL:(NSURL *)aURL encryption:(EncryptionMethod)method crc32:(uLong)crc32;
 - (void)start;
 - (void)stop;
