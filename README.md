@@ -21,3 +21,4 @@ CHANGES
 TODO
 ----
 - better handling of data connection loss
+- caching support
