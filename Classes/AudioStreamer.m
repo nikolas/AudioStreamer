@@ -532,6 +532,9 @@ void ASReadStreamCallBack
 		if (state != aStatus)
 		{
 			state = aStatus;
+            if ([self.delegate respondsToSelector:@selector(audioStreamStateDidChange:state:)]) {
+                [self.delegate audioStreamStateDidChange:self state:state];
+            }
 			
 			if ([[NSThread currentThread] isEqual:[NSThread mainThread]])
 			{
@@ -1710,7 +1713,7 @@ cleanup:
 {
 	@synchronized(self)
 	{
-        if (self.debug) NSLog(@"enqueueBuffer");
+        //if (self.debug) NSLog(@"enqueueBuffer");
 		if ([self isFinishing] || stream == 0)
 		{
 			return;
