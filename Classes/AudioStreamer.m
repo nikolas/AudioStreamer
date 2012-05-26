@@ -2282,7 +2282,7 @@ cleanup:
 			{
 				self.state = AS_STOPPED;
                 if ([self.delegate respondsToSelector:@selector(audioStreamDidFinishPlaying:withReason:)]) {
-                    [self.delegate audioStreamDidFinishPlaying:self withReason:stopReason];
+                    [self.delegate audioStreamDidStop:self withReason:stopReason];
                 }
 			}
 			else if (state == AS_WAITING_FOR_QUEUE_TO_START)
