@@ -406,6 +406,11 @@
     NSLog(@"audioStreamDidFinishPlaying delegation received");
 }
 
+- (void)audioStreamStateDidChange:(id)sender state:(AudioStreamerState)state
+{
+    NSLog(@"state changed: %d", state);
+}
+
 #pragma mark Remote Control Events
 /* The iPod controls will send these events when the app is in the background */
 - (void)remoteControlReceivedWithEvent:(UIEvent *)event {
