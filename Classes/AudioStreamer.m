@@ -1328,6 +1328,9 @@ cleanup:
 		{
 			self.state = AS_STOPPED;
 			stopReason = AS_STOPPING_USER_ACTION;
+            
+            if ([self.delegate respondsToSelector:@selector(audioStreamDidStop:withReason:)])
+                [self.delegate audioStreamDidStop:self withReason:stopReason];
 		}
 		seekWasRequested = NO;
 	}
@@ -1433,6 +1436,9 @@ cleanup:
                     {
                         self.state = AS_STOPPED;
                         stopReason = AS_STOPPING_EOF;
+                        
+                        if ([self.delegate respondsToSelector:@selector(audioStreamDidStop:withReason:)])
+                            [self.delegate audioStreamDidStop:self withReason:stopReason];
                     }
                 }
             }
@@ -1678,6 +1684,9 @@ cleanup:
                             {
                                 self.state = AS_STOPPED;
                                 stopReason = AS_STOPPING_EOF;
+                                
+                                if ([self.delegate respondsToSelector:@selector(audioStreamDidStop:withReason:)])
+                                    [self.delegate audioStreamDidStop:self withReason:stopReason];
                             }
                         }
                     }
@@ -2281,9 +2290,9 @@ cleanup:
 			if (state == AS_STOPPING)
 			{
 				self.state = AS_STOPPED;
-                if ([self.delegate respondsToSelector:@selector(audioStreamDidFinishPlaying:withReason:)]) {
+                
+                if ([self.delegate respondsToSelector:@selector(audioStreamDidStop:withReason:)])
                     [self.delegate audioStreamDidStop:self withReason:stopReason];
-                }
 			}
 			else if (state == AS_WAITING_FOR_QUEUE_TO_START)
 			{
