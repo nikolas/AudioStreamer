@@ -126,7 +126,7 @@ void MyPropertyListenerProc(	void *							inClientData,
 								UInt32 *						ioFlags)
 {	
 	// this is called by audio file stream when it finds property values
-	AudioStreamer* streamer = (AudioStreamer *)inClientData;
+	AudioStreamer* streamer = (__bridge AudioStreamer *)inClientData;
 	[streamer
 		handlePropertyChangeForFileStream:inAudioFileStream
 		fileStreamPropertyID:inPropertyID
@@ -151,7 +151,7 @@ void MyPacketsProc(				void *							inClientData,
 								AudioStreamPacketDescription	*inPacketDescriptions)
 {
 	// this is called by audio file stream when it finds packets of audio
-	AudioStreamer* streamer = (AudioStreamer *)inClientData;
+	AudioStreamer* streamer = (__bridge AudioStreamer *)inClientData;
 	[streamer
 		handleAudioPackets:inInputData
 		numberBytes:inNumberBytes
@@ -174,7 +174,7 @@ void MyAudioQueueOutputCallback(	void*					inClientData,
 {
 	// this is called by the audio queue when it has finished decoding our data. 
 	// The buffer is now free to be reused.
-	AudioStreamer* streamer = (AudioStreamer*)inClientData;
+	AudioStreamer* streamer = (__bridge AudioStreamer*)inClientData;
 	[streamer handleBufferCompleteForQueue:inAQ buffer:inBuffer];
 }
 
@@ -187,7 +187,7 @@ void MyAudioQueueOutputCallback(	void*					inClientData,
 //
 void MyAudioQueueIsRunningCallback(void *inUserData, AudioQueueRef inAQ, AudioQueuePropertyID inID)
 {
-	AudioStreamer* streamer = (AudioStreamer *)inUserData;
+	AudioStreamer* streamer = (__bridge AudioStreamer *)inUserData;
 	[streamer handlePropertyChangeForQueue:inAQ propertyID:inID];
 }
 
@@ -222,7 +222,7 @@ void ASReadStreamCallBack
    void* inClientInfo
 )
 {
-	AudioStreamer* streamer = (AudioStreamer *)inClientInfo;
+	AudioStreamer* streamer = (__bridge AudioStreamer *)inClientInfo;
 	[streamer handleReadFromStream:aStream eventType:eventType];
 }
 
@@ -304,10 +304,6 @@ void ASReadStreamCallBack
     if (self.debug) NSLog(@"[dealloc] self = %@", self);
 	[self stop];
 	//[url release];
-
-    RELEASE_SAFELY(_buffers);
-    RELEASE_SAFELY(_bufferLock);
-    RELEASE_SAFELY(_audioStreamLock);
 
 	[super dealloc];
 }
@@ -784,7 +780,7 @@ void ASReadStreamCallBack
                  [NSNull null], kCFStreamSSLPeerName,
                  nil];
                 
-                CFReadStreamSetProperty(stream, kCFStreamPropertySSLSettings, sslSettings);
+                CFReadStreamSetProperty(stream, kCFStreamPropertySSLSettings, (__bridge CFTypeRef)sslSettings);
             }
         }
 		
@@ -848,7 +844,7 @@ void ASReadStreamCallBack
 - (void)startInternal
 {
     
-	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	//NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	@synchronized(self)
 	{
 		if (state != AS_STARTING_FILE_THREAD)
@@ -859,7 +855,7 @@ void ASReadStreamCallBack
 				NSLog(@"### Not starting audio thread. State code is: %d", state);
 			}
 			self.state = AS_INITIALIZED;
-			[pool drain];
+			//[pool drain];
 			return;
 		}
 		
@@ -1001,7 +997,7 @@ cleanup:
 		[internalThread release];
 		internalThread = nil;
 	}
-	[pool drain];
+	//[pool drain];
 }
 
 //
